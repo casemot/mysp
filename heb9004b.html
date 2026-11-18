@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>Lecture 2D — grille</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Hebrew:wght@400;600&display=swap" rel="stylesheet">
+<style>
+body {
+  font-family: sans-serif;
+  margin: 0;
+  padding: 24px;
+  text-align: center;
+  background: #f7f7f7;
+}
+#controls {
+  margin-bottom: 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+#grid-wrapper {
+  display: flex;
+  justify-content: center;
+}
+#grid {
+  display: inline-block;
+  background: #111;
+  border: 2px solid #555;
+  padding: 8px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+  position: relative;
+  overflow: hidden;
+  /* Marbre noir avec veines blanches aléatoires */
+  background-image:
+    radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    radial-gradient(rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 50px 50px, 30px 30px;
+  background-blend-mode: overlay;
+}
+.row { display: flex; }
+.cell {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  box-sizing: border-box;
+}
+.header-cell { background: #111; color: #bbb; font-weight: 600; }
+.empty { background: #111; color: transparent; }
+
+/* Lettres hébraïques nettes et saphir avec scintillement animé */
+.hebrew-letter {
+  color: #66c0ff; /* bleu plus clair et contrasté */
+  font-family: 'Noto Serif Hebrew', serif;
+  font-weight: 700;
+  font-size: 20px;
+  text-shadow:
+    0 0 0.3px #66c0ff,
+    0 0 0.5px #99d0ff;
+  /*animation: sparkle 2s infinite alternate;*/
+}
+
+.hebrew-letter:hover {
+  text-shadow:
+    0 0 0.5px #66c0ff,
+    0 0 1.2px #99d0ff,
+    0 0 2px #b3e0ff; /* léger scintillement au survol */
+}
+
+@keyframes sparkle {
+  0% {
+    text-shadow: 0 0 0.3px #66c0ff, 0 0 0.5px #99d0ff, 0 0 1px #b3e0ff;
+  }
+  50% {
+    text-shadow: 0 0 0.5px #66c0ff, 0 0 0.8px #99d0ff, 0 0 2px #b3e0ff;
+  }
+  100% {
+    text-shadow: 0 0 0.3px #66c0ff, 0 0 0.5px #99d0ff, 0 0 1px #b3e0ff;
+  }
+}
+ 
+.highlight-main {
+  outline: 1px solid rgba(102,192,255,0.8);
+  box-shadow: 0 0 3px rgba(102,192,255,0.5);
+}
+</style>
+</head>
+<body>
+<h2>Two-dimensional reading</h2>
+
+<a href="index.html">
+    <img src="https://pink-fast-hookworm-378.mypinata.cloud/ipfs/bafybeibhfgxdqf46pociw4myitgqozafzdpsmc3apgbaj7ipv6ycmjhpmy"  height="49" alt="Accéder à la page suivante">
+</a>
+
+<div id="controls">
+  <label for="srange">s = <span id="sval">29</span></label>
+  <input id="srange" type="range" min="3" max="77" value="29" step="1" style="width:250px;">
+  <input id="sinput" type="number" min="3" max="77" value="29" style="width:60px;">
+</div>
+<div id="grid-wrapper"><div id="grid"></div></div>
+
+<script>
+const la=["כ", "ע", "ר", "ל", "ר", "ש", "א", "ל", "כ", "ו", "ו", "ר", "מ", "ח", "ו", "ו", "ר", "ו", "ש", "ו", "ת", "מ", "א", "ו", "ו", "ד", "ב",
+"ע", "ו", "ו", "ה", "ד", "ש", "כ", "ע", "ר", "ת", "י", "ב", "ה", "ו", 
+"א", "ת", "ת", "א", "ל", "ו", "כ", "ע", "ר", "ת", "ש", "א", "ד", "מ", 
+"ח", "ת", "א", "ל", "ו", "א", "ו", "ש", "ד", "ע", "כ", "ע", "ר", "ב", 
+"ה", "נ", "ע", "ת", "א", "ל", "ו", "ב", "נ", "ג", "ת", "א", "ל", "ו", 
+"פ", "א", "נ", "ת", "א", "ל", "ו", "ח", "צ", "ר", "ת", "א", "ל", "כ", 
+"ל", "נ", "ת", "נ", "כ", "י", "ה", "ל", "א", "ה", "ו", "ה", "י", "ר", 
+"ש", "א", "ה", "מ", "ד", "א", "ה", "ל", "ע", "כ", "ל", "ב", "ט", "י", 
+"י", "נ", "ע", "מ", "ל", "ו", "כ", "י", "מ", "י", "נ", "כ", "י", "ר", 
+"א", "י", "נ", "ע", "מ", "ל", "כ", "י", "ה", "ל", "א", "ה", "ו", "ה", 
+"י", "כ", "ו", "צ", "ר", "ש", "א", "כ", "כ", "מ", "א", "ת", "א", "ו", 
+"כ", "י", "ב", "א", "ת", "א", "ד", "ב", "כ", "ת", "ב", "ש", "ה", "מ", 
+"ו", "י", "ת", "א", "ת", "ו", "ש", "ע", "ל", "כ", "י", "ה", "ל", "א", 
+"ה", "ו", "ה", "י", "כ", "ו", "צ", "נ", "כ", "ל", "ע", "ה", "י", "ו", 
+"ט", "נ", "ע", "ר", "ז", "ב", "ו", "ה", "ק", "ז", "ח", "ד", "י", "ב", 
+"מ", "ש", "מ", "כ", "י", "ה", "ל", "א", "ה", "ו", "ה", "י", "כ", "א", 
+"צ", "י", "ו", "מ", "י", "ר", "צ", "מ", "צ", "ר", "א", "ב", "ת", "י", 
+"י", "ה", "ד", "ב", "ע", "י", "כ", "ת", "ר", "כ", "ז", "ו", "כ", "ו", 
+"מ", "כ", "כ", "ת", "מ", "א", "ו", "כ", "ד", "ב", "ע", "ח", "ו", "נ", 
+"י", "נ", "ע", "מ", "ל", "כ", "י", "ר", "ע", "ש", "ב", "ר", "ש", "א", 
+"כ", "ר", "ג", "ו", "כ", "ת", "מ", "ה", "ב", "ל", "כ", "ו", "כ", "ר", 
+"מ", "ח", "ו", "כ", "ר", "ו", "ש", "ו", "כ", "ת", "מ", "א", "ו", "כ", 
+"ד", "ב", "ע", "ו", "כ", "ת", "ב", "ו", "כ", "נ", "ב", "ו", "ה", "ת", 
+"א", "ה", "כ", "א", "ל", "מ", "ל", "כ", "ה", "ש", "ע", "ת", "א", "ל", 
+"כ", "י", "ה", "ל", "א", "ה", "ו", "ה", "י", "ל", "ת", "ב", "ש", "י", 
+"ע", "י", "ב", "ש", "ה", "מ", "ו", "י", "ו", "כ", "ת", "כ", "א", "ל", 
+"מ", "ל", "כ", "ת", "י", "ש", "ע", "ו", "ד", "ב", "ע", "ת", "מ", "י", 
+"מ", "י", "ת", "ש", "ש", "כ", "י", "ה", "ל", "א", "ה", "ו", "ה", "י", 
+"כ", "ו", "צ", "ר", "ש", "א", "כ", "ו", "ש", "ד", "ק", "ל", "ת", "ב", 
+"ש", "ה", "מ", "ו", "י", "ת", "א", "ר", "ו", "מ", "ש", "א", "ו", "ש", 
+"ל", "ו", "מ", "ש", "ת", "א", "א", "ש", "י", "ר", "ש", "א", "ת", "א", 
+"ה", "ו", "ה", "י", "ה", "ק", "נ", "י", "א", "ל", "י", "כ", "א", "ו", 
+"ש", "ל", "כ", "י", "ה", "ל", "א", "ה", "ו", "ה", "י", "מ", "ש", "ת", 
+"א", "א", "ש", "ת", "א", "ל", "ו", "ת", "ו", "צ", "מ", "י", "ר", "מ", 
+"ש", "ל", "ו", "י", "ב", "ה", "א", "ל", "מ", "י", "פ", "ל", "א", "ל", 
+"ד", "ס", "ח", "ה", "ש", "ע", "ו", "י", "א", "נ", "ש", "ל", "מ", "י", 
+"ע", "ב", "ר", "ל", "ע", "ו", "מ", "י", "ש", "ל", "ש", "ל", "ע", "ו", 
+"מ", "י", "נ", "ב", "ל", "ע", "ת", "ו", "ב", "א", "נ", "ו", "ע", "ד", 
+"ק", "פ", "א", "נ", "ק", "ל", "א", "כ", "י", "ה", "ל", "א", "ה", "ו", 
+"ה", "י", "י", "כ", "נ", "א", "י", "כ", "מ", "ד", "ב", "ע", "ת", "א", 
+"ל", "ו", "מ", "ה", "ל", "ה", "ו", "ח", "ת", "ש", "ת", "א", "ל", "צ", 
+"ר", "א", "ל", "ת", "ח", "ת", "מ", "מ", "י", "מ", "ב", "ר", "ש", "א", 
+"ו", "ת", "ח", "ת", "מ", "צ", "ר", "א", "ב", "ר", "ש", "א", "ו", "ל", 
+"ע", "מ", "מ", "מ", "י", "מ", "ש", "ב", "ר", "ש", "א", "ה", "נ", "ו", 
+"מ", "ת", "ל", "כ", "ל", "ס", "פ", "כ", "ל", "ה", "ש", "ע", "ת", "א", 
+"ל", "י", "נ", "פ", "ל", "ע", "מ", "י", "ר", "ח", "א", "מ", "י", "ה", 
+"ל", "א", "כ", "ל", "ה", "י", "ה", "י", "א", "ל"];
+
+function ar(t){const a=[];for(let s=1;s<t-1;s++){a.push(((s-(t%s)===1&&s<3)||(t%s===0))?s*Math.round(t/s):s*(Math.round(t/s)<2?Math.round(t/s)+2:Math.round(t/s)+1));}a.push((t-1)*(Math.round(t/(t-1))+1),t);return a.flat();}
+function cev(s){const a=ar(667),v=a[s-1],c=Math.round(v/2/s)+((Math.round(v/2/s)%2===0)?2:1);return Math.round(c%(v/s));}
+function ceh(s){const a=ar(667),v=a[s-1];return(Math.round((v/s-667)/2)===0)?1:Math.round((v-667)/2);}
+
+function renderGrid(s){
+  document.getElementById('sval').textContent=s;
+  const container=document.getElementById('grid');
+  container.innerHTML='';
+  const prefix=ceh(s),stream=new Array(prefix).fill('').concat(la.slice());
+  const totalRows=Math.ceil(stream.length/s); while(stream.length<totalRows*s) stream.push('');
+  const hRow=ceh(s)%totalRows, hCol=cev(s)%s;
+  const mainIndex=prefix+333;
+
+  // header colonnes
+  const headerRow=document.createElement('div');
+  headerRow.className='row';
+  headerRow.style.direction='rtl';
+  for(let i=1;i<=s;i++){
+    const h=document.createElement('div');
+    h.className='cell header-cell';
+    h.textContent=i;
+    headerRow.appendChild(h);
+  }
+  container.appendChild(headerRow);
+
+  // lignes
+  let letterCount=0;
+  const totalLetters = la.length;
+  const rows=[];
+  for(let r=0;r<totalRows;r++){
+    const row=document.createElement('div');
+    row.className='row';
+    for(let c=0;c<s;c++){
+      const idx=r*s+c;
+      const cell=document.createElement('div');
+      cell.className='cell';
+      if(stream[idx]!==''){
+        cell.textContent=stream[idx];
+        cell.classList.add('hebrew-letter');
+        letterCount++;
+        cell.title=`Lettre n°${totalLetters - letterCount + 1} — ligne ${totalRows - r}`;
+      } else cell.classList.add('empty');
+      if(idx===mainIndex) cell.classList.add('highlight-main');
+      row.appendChild(cell);
+    }
+    Array.from(row.children).reverse().forEach(c=>row.appendChild(c));
+    rows.push(row);
+  }
+  rows.reverse().forEach(r=>container.appendChild(r));
+}
+
+// interaction slider + input
+const sRange=document.getElementById('srange');
+const sInput=document.getElementById('sinput');
+sRange.addEventListener('input',e=>{sInput.value=e.target.value;renderGrid(+e.target.value);});
+sInput.addEventListener('input',e=>{let v=+e.target.value;if(v<3)v=3;if(v>77)v=77;sRange.value=v;renderGrid(v);});
+renderGrid(29);
+</script>
+<a href="index.html"></a>
+</body>
+</html>
