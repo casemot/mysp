@@ -84,7 +84,7 @@ body {
 }
 
 .highlight-main {
-  outline: 1px solid rgba(102,192,255,0.8);
+  outline: 2px solid rgba(102,192,255,0.8);
   box-shadow: 0 0 3px rgba(102,192,255,0.5);
 
 
@@ -98,11 +98,19 @@ body {
 </a>
 
 <div id="controls">
-  <label for="srange">s = <span id="sval">29</span></label>
+  <label for="srange">skip s = <span id="sval">29</span></label>
   <input id="srange" type="range" min="3" max="55" value="29" step="1" style="width:250px;">
   <input id="sinput" type="number" min="3" max="55" value="29" style="width:60px;">
 </div>
 <div id="grid-wrapper"><div id="grid"></div></div>
+
+<div>
+  <label for="trange">Horizontal Translation t :</label>
+  <input type="range" id="trange" min="-14" max="15" value="0" step="1">
+  <span id="tval">0</span>
+</div>
+
+
 
 <script>
 const la=["כ","ע","ר","ל","ר","ש","א","ל","כ","ו","ו","ר","מ","ח","ו","ו","ר","ו","ש","ו","ו","ת","מ","א","ו","ו","ד","ב","ע","ו","כ","ע","ר","ת","ש","א","ד","מ","ח","ת","א","ל","כ","ע","ר","ת","י","ב","ד","מ","ח","ת","א","ל","ר","ק","ש","ד","ע","כ","ע","ר","ב","ה","נ","ע","ת","א","ל","ב","נ","ג","ת","א","ל","פ","א","נ","ת","א","ל","ח","צ","ר","ת","א","ל","כ","ל","נ","ת","נ","כ","י","ה","ל","א","ה","ו","ה","י","ר","ש","א","ה","מ","ד","א","ה","ל","ע","כ","י","מ","י","נ","ו","כ","ר","א","י","נ","ע","מ","ל","כ","מ","א","ת","א","ו","כ","י","ב","א","ת","א","ד","ב","כ","ו","ה","ש","ד","ק","י","ו","ת","ב","ש","ה","מ","ו","י","ת","א","ה","ו","ה","י","כ","ר","ב","נ","כ","ל","ע","י","ע","י","ב","ש","ה","מ","ו","י","ב","ח","נ","י","ו","מ","ב","ר","ש","א","ל","כ","ת","א","ו","מ","י","ה","ת","א","צ","ר","א","ה","ת","א","ו","מ","י","מ","ש","ה","ת","א","ה","ו","ה","י","ה","ש","ע","מ","י","מ","י","ת","ש","ש","י","כ","כ","י","ר","ע","ש","ב","ר","ש","א","כ","ר","ג","ו","כ","ת","מ","ה","ב","ו","כ","ת","מ","א","ו","כ","ד","ב","ע","כ","ת","ב","ו","כ","נ","ב","ו","ה","ת","א","ה","כ","א","ל","מ","ל","כ","ה","ש","ע","ת","א","ל","כ","י","ה","ל","א","ה","ו","ה","י","ל","ת","ב","ש","י","ע","י","ב","ש","ה","מ","ו","י","ו","כ","ת","כ","א","ל","מ","ל","כ","ת","י","ש","ע","ו","ד","ב","ע","ת","מ","י","מ","י","ת","ש","ש","ו","ש","ד","ק","ל","ת","ב","ש","ה","מ","ו","י","ת","א","ר","ו","כ","ז","א","ו","ש","ל","ו","מ","ש","ת","א","א","ש","י","ר","ש","א","ת","א","ה","ו","ה","י","ה","ק","נ","י","א","ל","י","כ","א","ו","ש","ל","כ","י","ה","ל","א","ה","ו","ה","י","מ","ש","ת","א","א","ש","ת","א","ל","י","ת","ו","צ","מ","י","ר","מ","ש","ל","ו","י","ב","ה","א","ל","מ","י","פ","ל","א","ל","ד","ס","ח","ה","ש","ע","ו","י","א","נ","ש","ל","מ","י","ע","ב","ר","ל","ע","ו","מ","י","ש","ל","ש","ל","ע","מ","י","נ","ב","ל","ע","ת","ב","א","נ","ו","ע","ד","ק","פ","א","נ","ק","ל","א","כ","י","ה","ל","א","ה","ו","ה","י","י","כ","נ","א","י","כ","מ","ד","ב","ע","ת","א","ל","ו","מ","ה","ל","ה","ו","ח","ת","ש","ת","א","ל","צ","ר","א","ל","ת","ח","ת","מ","מ","י","מ","ב","ר","ש","א","ו","ת","ח","ת","מ","צ","ר","א","ב","ר","ש","א","ו","ל","ע","מ","מ","מ","י","מ","ש","ב","ר","ש","א","ה","נ","ו","מ","ת","ל","כ","ו","ל","ס","פ","כ","ל","ה","ש","ע","ת","א","ל","י","נ","פ","ל","ע","מ","י","ר","ח","א","מ","י","ה","ל","א","כ","ל","ה","י","ה","י","א","ל"];
@@ -111,19 +119,53 @@ function ar(t){const a=[];for(let s=1;s<t-1;s++){a.push(((s-(t%s)===1&&s<3)||(t%
 function cev(s){const a=ar(579),v=a[s-1],c=Math.round(v/2/s)+((Math.round(v/2/s)%2===0)?2:1);return Math.round(c%(v/s));}
 function ceh(s){const a=ar(579),v=a[s-1];return(Math.round((v/s-579)/2)===0)?1:Math.round((v-579)/2);}
 
+function updateTBounds(s){
+  const tRange=document.getElementById('trange');
+  const maxT=Math.trunc((s*Math.ceil(579/(s-1))-579)/2);
+//const maxT=Math.trunc(0.5*(s*(Math.ceil(579/s)+((s*Math.ceil(579/s)-579) % 2)) - 579));
+//const maxT=Math.ceil(0.5*(s*(Math.ceil(579/s)+((s*Math.ceil(579/s)-579) % 2)) - 579));
+//const maxT=Math.ceil((s*Math.ceil((579+0)/s)-579)/2);
+
+
+  tRange.min=-maxT;
+  tRange.max=maxT;
+
+  // Maintenir t dans les nouvelles limites
+  let t=Number(tRange.value);
+  t=Math.max(-maxT,Math.min(maxT,t));
+  tRange.value=t;
+
+  document.getElementById('tval').textContent=t;
+}
+
+
 function renderGrid(s){
+updateTBounds(s);
   document.getElementById('sval').textContent=s;
   const container=document.getElementById('grid');
   container.innerHTML='';
-  const prefix=ceh(s),stream=new Array(prefix).fill('').concat(la.slice());
-  const totalRows=Math.ceil(stream.length/s); while(stream.length<totalRows*s) stream.push('');
-  const hRow=ceh(s)%totalRows, hCol=cev(s)%s;
+
+  const t=Number(document.getElementById('trange').value);
+  const prefix=ceh(s);
+  const stream=new Array(prefix).fill('').concat(la.slice());
+  const totalRows=Math.ceil(stream.length/s);
+  while(stream.length<totalRows*s) stream.push('');
+
+  const totalCells=totalRows*s;
   const mainIndex=prefix+289;
 
-  // header colonnes
+  // Décalage circulaire du flux complet
+  const shifted=new Array(totalCells).fill('');
+  for(let i=0;i<totalCells;i++){
+    const destination=(i+t%totalCells+totalCells)%totalCells;
+    shifted[destination]=stream[i];
+  }
+
+  // En-tête des colonnes : source originale
   const headerRow=document.createElement('div');
   headerRow.className='row';
   headerRow.style.direction='rtl';
+
   for(let i=1;i<=s;i++){
     const h=document.createElement('div');
     h.className='cell header-cell';
@@ -132,40 +174,66 @@ function renderGrid(s){
   }
   container.appendChild(headerRow);
 
-  // lignes
   let letterCount=0;
-  const totalLetters = la.length;
+  const totalLetters=la.length;
   const rows=[];
+
   for(let r=0;r<totalRows;r++){
     const row=document.createElement('div');
     row.className='row';
+
     for(let c=0;c<s;c++){
       const idx=r*s+c;
       const cell=document.createElement('div');
       cell.className='cell';
-      if(stream[idx]!==''){
-        cell.textContent=stream[idx];
+
+      if(shifted[idx]!==''){
+        cell.textContent=shifted[idx];
         cell.classList.add('hebrew-letter');
         letterCount++;
-        cell.title=`Lettre n°${totalLetters - letterCount + 1} — ligne ${totalRows - r}`;
-      } else cell.classList.add('empty');
-      if(idx===mainIndex) cell.classList.add('highlight-main');
+        cell.title=`Letter n°${totalLetters-letterCount+1} — ligne ${totalRows-r}`;
+      }else{
+        cell.classList.add('empty');
+      }
+
+      const shiftedMainIndex=(mainIndex+t%totalCells+totalCells)%totalCells;
+if(idx===shiftedMainIndex) cell.classList.add('highlight-main');
       row.appendChild(cell);
     }
+
     Array.from(row.children).reverse().forEach(c=>row.appendChild(c));
     rows.push(row);
   }
+
   rows.reverse().forEach(r=>container.appendChild(r));
 }
 
-// interaction slider + input
+// Slider original s
 const sRange=document.getElementById('srange');
 const sInput=document.getElementById('sinput');
-sRange.addEventListener('input',e=>{sInput.value=e.target.value;renderGrid(+e.target.value);});
-sInput.addEventListener('input',e=>{let v=+e.target.value;if(v<3)v=3;if(v>55)v=55;sRange.value=v;renderGrid(v);});
+
+sRange.addEventListener('input',e=>{
+  sInput.value=e.target.value;
+  renderGrid(+e.target.value);
+});
+
+sInput.addEventListener('input',e=>{
+  let v=+e.target.value;
+  if(v<3)v=3;
+  if(v>55)v=55;
+  sRange.value=v;
+  renderGrid(v);
+});
+
+// Nouveau slider t
+const tRange=document.getElementById('trange');
+const tVal=document.getElementById('tval');
+
+tRange.addEventListener('input',e=>{
+  tVal.textContent=e.target.value;
+  renderGrid(+sRange.value);
+});
+
 renderGrid(29);
-
-</script>
-
-</body>
+</script></body>
 </html>
