@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -61,7 +61,7 @@ body {
   text-shadow:
     0 0 0.3px #66c0ff,
     0 0 0.5px #99d0ff;
-  /*animation: sparkle 2s infinite alternate;*/
+ /* animation: sparkle 2s infinite alternate;*/
 }
 
 .hebrew-letter:hover {
@@ -82,11 +82,12 @@ body {
     text-shadow: 0 0 0.3px #66c0ff, 0 0 0.5px #99d0ff, 0 0 1px #b3e0ff;
   }
 }
- 
+
 .highlight-main {
-  outline: 1px solid rgba(102,192,255,0.8);
+  outline: 2px solid rgba(102,192,255,0.8);
   box-shadow: 0 0 3px rgba(102,192,255,0.5);
-}
+
+
 </style>
 </head>
 <body>
@@ -97,11 +98,19 @@ body {
 </a>
 
 <div id="controls">
-  <label for="srange">s = <span id="sval">29</span></label>
-  <input id="srange" type="range" min="3" max="77" value="29" step="1" style="width:250px;">
-  <input id="sinput" type="number" min="3" max="77" value="29" style="width:60px;">
+  <label for="srange">skip s = <span id="sval">29</span></label>
+  <input id="srange" type="range" min="3" max="55" value="29" step="1" style="width:250px;">
+  <input id="sinput" type="number" min="3" max="55" value="29" style="width:60px;">
 </div>
 <div id="grid-wrapper"><div id="grid"></div></div>
+
+<div>
+  <label for="trange">Horizontal Translation t :</label>
+  <input type="range" id="trange" min="-36" max="37" value="0" step="1">
+  <span id="tval">0</span>
+</div>
+
+
 
 <script>
 const la=["כ", "ע", "ר", "ל", "ר", "ש", "א", "ל", "כ", "ו", "ו", "ר", "מ", "ח", "ו", "ו", "ר", "ו", "ש", "ו", "ת", "מ", "א", "ו", "ו", "ד", "ב",
@@ -154,21 +163,55 @@ const la=["כ", "ע", "ר", "ל", "ר", "ש", "א", "ל", "כ", "ו", "ו", "ר"
 
 function ar(t){const a=[];for(let s=1;s<t-1;s++){a.push(((s-(t%s)===1&&s<3)||(t%s===0))?s*Math.round(t/s):s*(Math.round(t/s)<2?Math.round(t/s)+2:Math.round(t/s)+1));}a.push((t-1)*(Math.round(t/(t-1))+1),t);return a.flat();}
 function cev(s){const a=ar(667),v=a[s-1],c=Math.round(v/2/s)+((Math.round(v/2/s)%2===0)?2:1);return Math.round(c%(v/s));}
-function ceh(s){const a=ar(667),v=a[s-1];return(Math.round((v/s-667)/2)===0)?1:Math.round((v-667)/2);}
+function ceh(s){const a=ar(667),v=a[s-1];return(Math.round((v/s-579)/2)===0)?1:Math.round((v-667)/2);}
+
+function updateTBounds(s){
+  const tRange=document.getElementById('trange');
+  const maxT=Math.trunc((s*Math.ceil(667/(s-1))-667)/2);
+//const maxT=Math.trunc(0.5*(s*(Math.ceil(579/s)+((s*Math.ceil(579/s)-579) % 2)) - 579));
+//const maxT=Math.ceil(0.5*(s*(Math.ceil(579/s)+((s*Math.ceil(579/s)-579) % 2)) - 579));
+//const maxT=Math.ceil((s*Math.ceil((579+0)/s)-579)/2);
+
+
+  tRange.min=-maxT;
+  tRange.max=maxT;
+
+  // Maintenir t dans les nouvelles limites
+  let t=Number(tRange.value);
+  t=Math.max(-maxT,Math.min(maxT,t));
+  tRange.value=t;
+
+  document.getElementById('tval').textContent=t;
+}
+
 
 function renderGrid(s){
+updateTBounds(s);
   document.getElementById('sval').textContent=s;
   const container=document.getElementById('grid');
   container.innerHTML='';
-  const prefix=ceh(s),stream=new Array(prefix).fill('').concat(la.slice());
-  const totalRows=Math.ceil(stream.length/s); while(stream.length<totalRows*s) stream.push('');
-  const hRow=ceh(s)%totalRows, hCol=cev(s)%s;
+
+  const t=Number(document.getElementById('trange').value);
+  const prefix=ceh(s);
+  const stream=new Array(prefix).fill('').concat(la.slice());
+  const totalRows=Math.ceil(stream.length/s);
+  while(stream.length<totalRows*s) stream.push('');
+
+  const totalCells=totalRows*s;
   const mainIndex=prefix+333;
 
-  // header colonnes
+  // Décalage circulaire du flux complet
+  const shifted=new Array(totalCells).fill('');
+  for(let i=0;i<totalCells;i++){
+    const destination=(i+t%totalCells+totalCells)%totalCells;
+    shifted[destination]=stream[i];
+  }
+
+  // En-tête des colonnes : source originale
   const headerRow=document.createElement('div');
   headerRow.className='row';
   headerRow.style.direction='rtl';
+
   for(let i=1;i<=s;i++){
     const h=document.createElement('div');
     h.className='cell header-cell';
@@ -177,39 +220,66 @@ function renderGrid(s){
   }
   container.appendChild(headerRow);
 
-  // lignes
   let letterCount=0;
-  const totalLetters = la.length;
+  const totalLetters=la.length;
   const rows=[];
+
   for(let r=0;r<totalRows;r++){
     const row=document.createElement('div');
     row.className='row';
+
     for(let c=0;c<s;c++){
       const idx=r*s+c;
       const cell=document.createElement('div');
       cell.className='cell';
-      if(stream[idx]!==''){
-        cell.textContent=stream[idx];
+
+      if(shifted[idx]!==''){
+        cell.textContent=shifted[idx];
         cell.classList.add('hebrew-letter');
         letterCount++;
-        cell.title=`Lettre n°${totalLetters - letterCount + 1} — ligne ${totalRows - r}`;
-      } else cell.classList.add('empty');
-      if(idx===mainIndex) cell.classList.add('highlight-main');
+        cell.title=`Letter n°${totalLetters-letterCount+1} — ligne ${totalRows-r}`;
+      }else{
+        cell.classList.add('empty');
+      }
+
+      const shiftedMainIndex=(mainIndex+t%totalCells+totalCells)%totalCells;
+if(idx===shiftedMainIndex) cell.classList.add('highlight-main');
       row.appendChild(cell);
     }
+
     Array.from(row.children).reverse().forEach(c=>row.appendChild(c));
     rows.push(row);
   }
+
   rows.reverse().forEach(r=>container.appendChild(r));
 }
 
-// interaction slider + input
+// Slider original s
 const sRange=document.getElementById('srange');
 const sInput=document.getElementById('sinput');
-sRange.addEventListener('input',e=>{sInput.value=e.target.value;renderGrid(+e.target.value);});
-sInput.addEventListener('input',e=>{let v=+e.target.value;if(v<3)v=3;if(v>77)v=77;sRange.value=v;renderGrid(v);});
+
+sRange.addEventListener('input',e=>{
+  sInput.value=e.target.value;
+  renderGrid(+e.target.value);
+});
+
+sInput.addEventListener('input',e=>{
+  let v=+e.target.value;
+  if(v<3)v=3;
+  if(v>55)v=55;
+  sRange.value=v;
+  renderGrid(v);
+});
+
+// Nouveau slider t
+const tRange=document.getElementById('trange');
+const tVal=document.getElementById('tval');
+
+tRange.addEventListener('input',e=>{
+  tVal.textContent=e.target.value;
+  renderGrid(+sRange.value);
+});
+
 renderGrid(29);
-</script>
-<a href="index.html"></a>
-</body>
+</script></body>
 </html>
